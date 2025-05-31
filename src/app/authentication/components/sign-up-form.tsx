@@ -26,7 +26,11 @@ const registerSchema = z.object({
   email: z.string().trim().min(1, { message: "Email é obrigatório" }).email({
     message: "Email inválido",
   }),
-  password: z.string().trim().min(8, { message: "Senha é obrigatória" }),
+  password: z
+    .string()
+    .trim()
+    .min(1, { message: "Senha é obrigatória" })
+    .min(8, { message: "Senha deve ter pelo menos 8 caracteres" }),
 });
 
 const SignUpForm = () => {
@@ -47,12 +51,12 @@ const SignUpForm = () => {
   return (
     <Card>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <CardHeader>
             <CardTitle>Criar Conta</CardTitle>
             <CardDescription>Crie uma conta para continuar.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -86,7 +90,11 @@ const SignUpForm = () => {
                 <FormItem>
                   <FormLabel>Senha</FormLabel>
                   <FormControl>
-                    <Input placeholder="Digite sua senha" {...field} />
+                    <Input
+                      placeholder="Digite sua senha"
+                      type="password"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -94,7 +102,7 @@ const SignUpForm = () => {
             />
           </CardContent>
           <CardFooter>
-            <Button>Criar Conta</Button>
+            <Button className="w-full">Criar Conta</Button>
           </CardFooter>
         </form>
       </Form>
