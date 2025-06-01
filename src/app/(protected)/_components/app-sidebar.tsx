@@ -8,7 +8,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -58,6 +58,7 @@ const items = [
 const AppSidebar = () => {
   const router = useRouter();
   const session = authClient.useSession();
+  const pathname = usePathname();
 
   const handleSignOut = async () => {
     await authClient.signOut({
@@ -86,7 +87,7 @@ const AppSidebar = () => {
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild isActive={pathname === item.url}>
                     <a href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
@@ -107,7 +108,7 @@ const AppSidebar = () => {
                   <Avatar>
                     <AvatarImage src={session?.data?.user.image ?? ""} />
                     <AvatarFallback>
-                      {session?.data?.user.clinic?.name.slice(0, 2)}
+                      {session?.data?.user.clinic?.name.slice(0, 1)}
                     </AvatarFallback>
                   </Avatar>
                   <div>
