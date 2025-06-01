@@ -21,23 +21,15 @@ export const auth = betterAuth({
         },
       });
 
-      if (!clinic) {
-        return {
-          user: {
-            ...user,
-            clinic: null,
-          },
-          session,
-        };
-      }
-
       return {
         user: {
           ...user,
-          clinic: {
-            id: clinic.clinicId,
-            name: clinic.clinic.name,
-          },
+          clinic: clinic
+            ? {
+                id: clinic.clinicId,
+                name: clinic.clinic.name,
+              }
+            : undefined,
         },
         session,
       };
