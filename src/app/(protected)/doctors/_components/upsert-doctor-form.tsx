@@ -35,6 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { doctorsTable } from "@/db/schema";
 
 import { medicalSpecialties } from "../_contants";
 
@@ -43,10 +44,12 @@ const formSchema = z
     name: z.string().min(1, { message: "Nome é obrigatório" }),
     availableFromWeekDay: z
       .string()
-      .min(0, { message: "Dia de início é obrigatório" }),
+      .min(0, { message: "Dia de início é obrigatório" })
+      .max(6, { message: "Dia de início inválido" }),
     availableToWeekDay: z
       .string()
-      .min(0, { message: "Dia de término é obrigatório" }),
+      .min(0, { message: "Dia de término é obrigatório" })
+      .max(6, { message: "Dia de término inválido" }),
     availableFromTime: z
       .string()
       .min(1, { message: "Hora de início é obrigatório" }),
@@ -67,36 +70,46 @@ const formSchema = z
   );
 
 interface UpsertDoctorFormProps {
+  doctor?: typeof doctorsTable.$inferSelect;
   onSuccess: () => void;
 }
 
-const UpsertDoctorForm = ({ onSuccess }: UpsertDoctorFormProps) => {
+const UpsertDoctorForm = ({ doctor, onSuccess }: UpsertDoctorFormProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      availableFromWeekDay: "0",
-      availableToWeekDay: "0",
-      availableFromTime: "",
-      availableToTime: "",
-      speciality: "",
-      appointmentPrice: 0,
+      name: doctor?.name ?? "",
+      availableFromWeekDay: doctor?.availableFromWeekDay.toString() ?? "0",
+      availableToWeekDay: doctor?.availableToWeekDay.toString() ?? "0",
+      availableFromTime: doctor?.availableFromTime ?? "",
+      availableToTime: doctor?.availableToTime ?? "",
+      speciality: doctor?.speciality ?? "",
+      appointmentPrice: doctor?.appointmentPriceInCents
+        ? doctor.appointmentPriceInCents / 100
+        : 0,
     },
   });
 
   const upsertDoctorAction = useAction(upsertDoctor, {
     onSuccess: () => {
-      toast.success("Médico adicionado com sucesso");
+      toast.success(
+        doctor
+          ? "Médico atualizado com sucesso"
+          : "Médico adicionado com sucesso"
+      );
       onSuccess();
     },
     onError: () => {
-      toast.error("Erro ao adicionar médico");
+      toast.error(
+        doctor ? "Erro ao atualizar médico" : "Erro ao adicionar médico"
+      );
     },
   });
 
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
     upsertDoctorAction.execute({
       ...values,
+      id: doctor?.id,
       appointmentPriceInCents: values.appointmentPrice * 100,
       availableFromWeekDay: parseInt(values.availableFromWeekDay),
       availableToWeekDay: parseInt(values.availableToWeekDay),
@@ -106,9 +119,11 @@ const UpsertDoctorForm = ({ onSuccess }: UpsertDoctorFormProps) => {
   return (
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>Adicionar médico</DialogTitle>
+        <DialogTitle>{doctor ? doctor.name : "Adicionar médico"}</DialogTitle>
         <DialogDescription>
-          Adicione um novo médico à sua clínica.
+          {doctor
+            ? "Edite as informações do médico"
+            : "Adicione um novo médico."}
         </DialogDescription>
       </DialogHeader>
       <Form {...form}>
@@ -186,7 +201,11 @@ const UpsertDoctorForm = ({ onSuccess }: UpsertDoctorFormProps) => {
               <FormItem>
                 <FormLabel>Dia inicial de disponibilidade</FormLabel>
                 <FormControl>
-                  <Select onValueChange={field.onChange} defaultValue={"1"}>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    defaultValue={"1"}
+                  >
                     <FormControl className="w-full">
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione um dia" />
@@ -214,7 +233,11 @@ const UpsertDoctorForm = ({ onSuccess }: UpsertDoctorFormProps) => {
               <FormItem>
                 <FormLabel>Dia final de disponibilidade</FormLabel>
                 <FormControl>
-                  <Select onValueChange={field.onChange} defaultValue={"5"}>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    defaultValue={"5"}
+                  >
                     <FormControl className="w-full">
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione um dia" />
@@ -241,7 +264,7 @@ const UpsertDoctorForm = ({ onSuccess }: UpsertDoctorFormProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Hora inicial de disponibilidade</FormLabel>
-                <Select onValueChange={field.onChange}>
+                <Select value={field.value} onValueChange={field.onChange}>
                   <FormControl className="w-full">
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione um horário" />
@@ -302,7 +325,7 @@ const UpsertDoctorForm = ({ onSuccess }: UpsertDoctorFormProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Hora final de disponibilidade</FormLabel>
-                <Select onValueChange={field.onChange}>
+                <Select value={field.value} onValueChange={field.onChange}>
                   <FormControl className="w-full">
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione um horário" />
@@ -362,6 +385,8 @@ const UpsertDoctorForm = ({ onSuccess }: UpsertDoctorFormProps) => {
             <Button type="submit" disabled={upsertDoctorAction.isPending}>
               {upsertDoctorAction.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : doctor ? (
+                "Salvar"
               ) : (
                 "Adicionar"
               )}
