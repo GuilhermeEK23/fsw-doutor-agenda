@@ -76,11 +76,12 @@ interface UpsertDoctorFormProps {
 
 const UpsertDoctorForm = ({ doctor, onSuccess }: UpsertDoctorFormProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
+    shouldUnregister: true,
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: doctor?.name ?? "",
-      availableFromWeekDay: doctor?.availableFromWeekDay.toString() ?? "0",
-      availableToWeekDay: doctor?.availableToWeekDay.toString() ?? "0",
+      availableFromWeekDay: doctor?.availableFromWeekDay.toString() ?? "1",
+      availableToWeekDay: doctor?.availableToWeekDay.toString() ?? "5",
       availableFromTime: doctor?.availableFromTime ?? "",
       availableToTime: doctor?.availableToTime ?? "",
       speciality: doctor?.speciality ?? "",
@@ -202,9 +203,8 @@ const UpsertDoctorForm = ({ doctor, onSuccess }: UpsertDoctorFormProps) => {
                 <FormLabel>Dia inicial de disponibilidade</FormLabel>
                 <FormControl>
                   <Select
-                    value={field.value}
                     onValueChange={field.onChange}
-                    defaultValue={"1"}
+                    defaultValue={field.value}
                   >
                     <FormControl className="w-full">
                       <SelectTrigger>
@@ -234,9 +234,8 @@ const UpsertDoctorForm = ({ doctor, onSuccess }: UpsertDoctorFormProps) => {
                 <FormLabel>Dia final de disponibilidade</FormLabel>
                 <FormControl>
                   <Select
-                    value={field.value}
                     onValueChange={field.onChange}
-                    defaultValue={"5"}
+                    defaultValue={field.value}
                   >
                     <FormControl className="w-full">
                       <SelectTrigger>
