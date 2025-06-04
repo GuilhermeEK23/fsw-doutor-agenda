@@ -4,14 +4,7 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 
 import UpsertPatientForm from "./upsert-patient-form";
 
@@ -26,15 +19,7 @@ const AddPatientButton = () => {
           Adicionar paciente
         </Button>
       </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Adicionar paciente</DialogTitle>
-          <DialogDescription>
-            Preencha os dados do paciente abaixo.
-          </DialogDescription>
-        </DialogHeader>
-        <UpsertPatientForm onSuccess={() => setIsOpen(false)} isOpen={isOpen} />
-      </DialogContent>
+      <UpsertPatientForm onSuccess={() => setIsOpen(false)} isOpen={isOpen} />
     </Dialog>
   );
 };

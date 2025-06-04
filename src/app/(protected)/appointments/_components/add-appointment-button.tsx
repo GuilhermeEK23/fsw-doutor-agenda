@@ -4,14 +4,7 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { doctorsTable, patientsTable } from "@/db/schema";
 
 import UpsertAppointmentForm from "./upsert-appointment-form";
@@ -32,23 +25,16 @@ const AddAppointmentButton = ({
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
-          Adicionar consulta
+          Novo agendamento
         </Button>
       </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Adicionar consulta</DialogTitle>
-          <DialogDescription>
-            Preencha os dados da consulta abaixo.
-          </DialogDescription>
-        </DialogHeader>
-        <UpsertAppointmentForm
-          onSuccess={() => setIsOpen(false)}
-          isOpen={isOpen}
-          patients={patients}
-          doctors={doctors}
-        />
-      </DialogContent>
+
+      <UpsertAppointmentForm
+        isOpen={isOpen}
+        patients={patients}
+        doctors={doctors}
+        onSuccess={() => setIsOpen(false)}
+      />
     </Dialog>
   );
 };

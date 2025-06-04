@@ -27,13 +27,15 @@ const AppointmentsPage = async () => {
     redirect("/clinic-form");
   }
 
-  const patients = await db.query.patientsTable.findMany({
-    where: eq(patientsTable.clinicId, session.user.clinic.id),
-  });
+  const [patients, doctors] = await Promise.all([
+    db.query.patientsTable.findMany({
+      where: eq(patientsTable.clinicId, session.user.clinic.id),
+    }),
 
-  const doctors = await db.query.doctorsTable.findMany({
-    where: eq(doctorsTable.clinicId, session.user.clinic.id),
-  });
+    db.query.doctorsTable.findMany({
+      where: eq(doctorsTable.clinicId, session.user.clinic.id),
+    }),
+  ]);
 
   return (
     <PageContainer>

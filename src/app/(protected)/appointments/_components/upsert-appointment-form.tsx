@@ -15,6 +15,12 @@ import { upsertAppointment } from "@/actions/upsert-appointment";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Form,
   FormControl,
   FormField,
@@ -129,220 +135,230 @@ const UpsertAppointmentForm = ({
   const canSelectDateTime = form.watch("patientId") && form.watch("doctorId");
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="patientId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Paciente</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione um paciente" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {patients?.map(
-                    (patient: typeof patientsTable.$inferSelect) => (
-                      <SelectItem key={patient.id} value={patient.id}>
-                        {patient.name}
-                      </SelectItem>
-                    )
-                  )}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="doctorId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Médico</FormLabel>
-              <Select
-                onValueChange={(value) => {
-                  field.onChange(value);
-                  const doctor = doctors?.find(
-                    (d: typeof doctorsTable.$inferSelect) => d.id === value
-                  );
-                  if (doctor) {
-                    setSelectedDoctor({
-                      id: doctor.id,
-                      appointmentPriceInCents: doctor.appointmentPriceInCents,
-                    });
-                  }
-                }}
-                value={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione um médico" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {doctors?.map((doctor: typeof doctorsTable.$inferSelect) => (
-                    <SelectItem key={doctor.id} value={doctor.id}>
-                      {doctor.name} - {doctor.speciality}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="appointmentPriceInCents"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Preço da consulta</FormLabel>
-              <FormControl>
-                <NumericFormat
-                  value={field.value}
-                  onValueChange={(value) => {
-                    field.onChange(value.floatValue ?? 0);
-                  }}
-                  decimalScale={2}
-                  fixedDecimalScale
-                  decimalSeparator=","
-                  allowNegative={false}
-                  allowLeadingZeros={false}
-                  thousandSeparator="."
-                  customInput={Input}
-                  prefix="R$ "
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="date"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Data da consulta</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Novo agendamento</DialogTitle>
+        <DialogDescription>
+          Preencha os dados do agendamento abaixo.
+        </DialogDescription>
+      </DialogHeader>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="patientId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Paciente</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                      disabled={!canSelectDateTime}
-                    >
-                      {field.value ? (
-                        format(field.value, "PPP", { locale: ptBR })
-                      ) : (
-                        <span>Selecione uma data</span>
-                      )}
-                    </Button>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecione um paciente" />
+                    </SelectTrigger>
                   </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    locale={ptBR}
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={disabledDates}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                  <SelectContent>
+                    {patients?.map(
+                      (patient: typeof patientsTable.$inferSelect) => (
+                        <SelectItem key={patient.id} value={patient.id}>
+                          {patient.name}
+                        </SelectItem>
+                      )
+                    )}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name="time"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Hora da consulta</FormLabel>
-              <Select
-                disabled={!canSelectDateTime}
-                value={field.value}
-                onValueChange={field.onChange}
-              >
+          <FormField
+            control={form.control}
+            name="doctorId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Médico</FormLabel>
+                <Select
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    const doctor = doctors?.find(
+                      (d: typeof doctorsTable.$inferSelect) => d.id === value
+                    );
+                    if (doctor) {
+                      setSelectedDoctor({
+                        id: doctor.id,
+                        appointmentPriceInCents: doctor.appointmentPriceInCents,
+                      });
+                    }
+                  }}
+                  value={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecione um médico" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {doctors?.map(
+                      (doctor: typeof doctorsTable.$inferSelect) => (
+                        <SelectItem key={doctor.id} value={doctor.id}>
+                          {doctor.name} - {doctor.speciality}
+                        </SelectItem>
+                      )
+                    )}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="appointmentPriceInCents"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Preço da consulta</FormLabel>
                 <FormControl>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione um horário" />
-                  </SelectTrigger>
+                  <NumericFormat
+                    value={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value.floatValue ?? 0);
+                    }}
+                    decimalScale={2}
+                    fixedDecimalScale
+                    decimalSeparator=","
+                    allowNegative={false}
+                    allowLeadingZeros={false}
+                    thousandSeparator="."
+                    customInput={Input}
+                    prefix="R$ "
+                  />
                 </FormControl>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>Manhã</SelectLabel>
-                    <SelectItem value="05:00:00">05:00</SelectItem>
-                    <SelectItem value="05:30:00">05:30</SelectItem>
-                    <SelectItem value="06:00:00">06:00</SelectItem>
-                    <SelectItem value="06:30:00">06:30</SelectItem>
-                    <SelectItem value="07:00:00">07:00</SelectItem>
-                    <SelectItem value="07:30:00">07:30</SelectItem>
-                    <SelectItem value="08:00:00">08:00</SelectItem>
-                    <SelectItem value="08:30:00">08:30</SelectItem>
-                    <SelectItem value="09:00:00">09:00</SelectItem>
-                    <SelectItem value="09:30:00">09:30</SelectItem>
-                    <SelectItem value="10:00:00">10:00</SelectItem>
-                    <SelectItem value="10:30:00">10:30</SelectItem>
-                    <SelectItem value="11:00:00">11:00</SelectItem>
-                    <SelectItem value="11:30:00">11:30</SelectItem>
-                    <SelectItem value="12:00:00">12:00</SelectItem>
-                  </SelectGroup>
-                  <SelectGroup>
-                    <SelectLabel>Tarde</SelectLabel>
-                    <SelectItem value="12:30:00">12:30</SelectItem>
-                    <SelectItem value="13:00:00">13:00</SelectItem>
-                    <SelectItem value="13:30:00">13:30</SelectItem>
-                    <SelectItem value="14:00:00">14:00</SelectItem>
-                    <SelectItem value="14:30:00">14:30</SelectItem>
-                    <SelectItem value="15:00:00">15:00</SelectItem>
-                    <SelectItem value="15:30:00">15:30</SelectItem>
-                    <SelectItem value="16:00:00">16:00</SelectItem>
-                    <SelectItem value="16:30:00">16:30</SelectItem>
-                    <SelectItem value="17:00:00">17:00</SelectItem>
-                    <SelectItem value="17:30:00">17:30</SelectItem>
-                    <SelectItem value="18:00:00">18:00</SelectItem>
-                  </SelectGroup>
-                  <SelectGroup>
-                    <SelectLabel>Noite</SelectLabel>
-                    <SelectItem value="18:30:00">18:30</SelectItem>
-                    <SelectItem value="19:00:00">19:00</SelectItem>
-                    <SelectItem value="19:30:00">19:30</SelectItem>
-                    <SelectItem value="20:00:00">20:00</SelectItem>
-                    <SelectItem value="20:30:00">20:30</SelectItem>
-                    <SelectItem value="21:00:00">21:00</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={upsertAppointmentAction.isPending}
-        >
-          {upsertAppointmentAction.isPending ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : null}
-          Agendar consulta
-        </Button>
-      </form>
-    </Form>
+          <FormField
+            control={form.control}
+            name="date"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Data da consulta</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                        disabled={!canSelectDateTime}
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP", { locale: ptBR })
+                        ) : (
+                          <span>Selecione uma data</span>
+                        )}
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      locale={ptBR}
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={disabledDates}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="time"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Hora da consulta</FormLabel>
+                <Select
+                  disabled={!canSelectDateTime}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <FormControl>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecione um horário" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Manhã</SelectLabel>
+                      <SelectItem value="05:00:00">05:00</SelectItem>
+                      <SelectItem value="05:30:00">05:30</SelectItem>
+                      <SelectItem value="06:00:00">06:00</SelectItem>
+                      <SelectItem value="06:30:00">06:30</SelectItem>
+                      <SelectItem value="07:00:00">07:00</SelectItem>
+                      <SelectItem value="07:30:00">07:30</SelectItem>
+                      <SelectItem value="08:00:00">08:00</SelectItem>
+                      <SelectItem value="08:30:00">08:30</SelectItem>
+                      <SelectItem value="09:00:00">09:00</SelectItem>
+                      <SelectItem value="09:30:00">09:30</SelectItem>
+                      <SelectItem value="10:00:00">10:00</SelectItem>
+                      <SelectItem value="10:30:00">10:30</SelectItem>
+                      <SelectItem value="11:00:00">11:00</SelectItem>
+                      <SelectItem value="11:30:00">11:30</SelectItem>
+                      <SelectItem value="12:00:00">12:00</SelectItem>
+                    </SelectGroup>
+                    <SelectGroup>
+                      <SelectLabel>Tarde</SelectLabel>
+                      <SelectItem value="12:30:00">12:30</SelectItem>
+                      <SelectItem value="13:00:00">13:00</SelectItem>
+                      <SelectItem value="13:30:00">13:30</SelectItem>
+                      <SelectItem value="14:00:00">14:00</SelectItem>
+                      <SelectItem value="14:30:00">14:30</SelectItem>
+                      <SelectItem value="15:00:00">15:00</SelectItem>
+                      <SelectItem value="15:30:00">15:30</SelectItem>
+                      <SelectItem value="16:00:00">16:00</SelectItem>
+                      <SelectItem value="16:30:00">16:30</SelectItem>
+                      <SelectItem value="17:00:00">17:00</SelectItem>
+                      <SelectItem value="17:30:00">17:30</SelectItem>
+                      <SelectItem value="18:00:00">18:00</SelectItem>
+                    </SelectGroup>
+                    <SelectGroup>
+                      <SelectLabel>Noite</SelectLabel>
+                      <SelectItem value="18:30:00">18:30</SelectItem>
+                      <SelectItem value="19:00:00">19:00</SelectItem>
+                      <SelectItem value="19:30:00">19:30</SelectItem>
+                      <SelectItem value="20:00:00">20:00</SelectItem>
+                      <SelectItem value="20:30:00">20:30</SelectItem>
+                      <SelectItem value="21:00:00">21:00</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={upsertAppointmentAction.isPending}
+          >
+            {upsertAppointmentAction.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
+            Agendar consulta
+          </Button>
+        </form>
+      </Form>
+    </DialogContent>
   );
 };
 

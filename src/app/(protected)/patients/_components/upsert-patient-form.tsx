@@ -110,7 +110,7 @@ const UpsertPatientForm = ({
         <DialogDescription>
           {patient
             ? "Edite as informações do paciente"
-            : "Adicione um novo paciente."}
+            : "Preencha os dados do paciente abaixo."}
         </DialogDescription>
       </DialogHeader>
 
