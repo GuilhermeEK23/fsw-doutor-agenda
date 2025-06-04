@@ -33,7 +33,7 @@ const AddPatientButton = () => {
             Preencha os dados do paciente abaixo.
           </DialogDescription>
         </DialogHeader>
-        <UpsertPatientForm onSuccess={() => setIsOpen(false)} />
+        <UpsertPatientForm onSuccess={() => setIsOpen(false)} isOpen={isOpen} />
       </DialogContent>
     </Dialog>
   );
