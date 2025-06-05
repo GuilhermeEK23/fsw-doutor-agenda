@@ -1,8 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import dayjs from "dayjs";
 import { Loader2 } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useEffect } from "react";
@@ -11,6 +13,7 @@ import { NumericFormat } from "react-number-format";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { getAvailableTimes } from "@/actions/get-available-times";
 import { upsertAppointment } from "@/actions/upsert-appointment";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -67,42 +70,6 @@ interface UpsertAppointmentFormProps {
   };
 }
 
-const timeSlots = [
-  "05:00:00",
-  "05:30:00",
-  "06:00:00",
-  "06:30:00",
-  "07:00:00",
-  "07:30:00",
-  "08:00:00",
-  "08:30:00",
-  "09:00:00",
-  "09:30:00",
-  "10:00:00",
-  "10:30:00",
-  "11:00:00",
-  "11:30:00",
-  "12:00:00",
-  "12:30:00",
-  "13:00:00",
-  "13:30:00",
-  "14:00:00",
-  "14:30:00",
-  "15:00:00",
-  "15:30:00",
-  "16:00:00",
-  "16:30:00",
-  "17:00:00",
-  "17:30:00",
-  "18:00:00",
-  "18:30:00",
-  "19:00:00",
-  "19:30:00",
-  "20:00:00",
-  "20:30:00",
-  "21:00:00",
-];
-
 const UpsertAppointmentForm = ({
   onSuccess,
   isOpen,
@@ -128,6 +95,16 @@ const UpsertAppointmentForm = ({
 
   const selectedDoctorId = form.watch("doctorId");
   const selectedPatientId = form.watch("patientId");
+  const selectedDate = form.watch("date");
+
+  const { data: availableTimes } = useQuery({
+    queryKey: ["available-times", selectedDoctorId, selectedDate],
+    queryFn: () =>
+      getAvailableTimes({
+        doctorId: selectedDoctorId,
+        date: dayjs(selectedDate).format("YYYY-MM-DD"),
+      }),
+  });
 
   const upsertAppointmentAction = useAction(upsertAppointment, {
     onSuccess: () => {
@@ -347,9 +324,9 @@ const UpsertAppointmentForm = ({
             name="time"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Hora da consulta</FormLabel>
+                <FormLabel>Horário da consulta</FormLabel>
                 <Select
-                  disabled={!isDateTimeEnabled}
+                  disabled={!isDateTimeEnabled || !selectedDate}
                   value={field.value}
                   onValueChange={field.onChange}
                 >
@@ -359,9 +336,9 @@ const UpsertAppointmentForm = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {timeSlots.map((time) => (
-                      <SelectItem key={time} value={time}>
-                        {time.slice(0, 5)}
+                    {availableTimes?.data?.map((time) => (
+                      <SelectItem key={time.value} value={time.value}>
+                        {time.value.slice(0, 5)}
                       </SelectItem>
                     ))}
                   </SelectContent>

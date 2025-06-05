@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { appointmentsTable } from "@/db/schema";
 
-import UpsertAppointmentForm from "./upsert-appointment-form";
+// import UpsertAppointmentForm from "./upsert-appointment-form";
 
 const AppointmentsTableActions = ({
   appointment,
@@ -85,7 +85,7 @@ const AppointmentsTableActions = ({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <UpsertAppointmentForm
+          {/* <UpsertAppointmentForm
             patients={[
               {
                 id: appointment.id,
@@ -117,7 +117,7 @@ const AppointmentsTableActions = ({
             appointment={appointment}
             onSuccess={() => setIsUpsertAppointmentDialogOpen(false)}
             isOpen={isUpsertAppointmentDialogOpen}
-          />
+          /> */}
         </Dialog>
 
         <AlertDialogContent>

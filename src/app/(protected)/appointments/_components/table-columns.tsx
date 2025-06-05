@@ -15,30 +15,35 @@ export const appointmentsTableColumns: ColumnDef<
   }
 >[] = [
   {
+    id: "patient",
     accessorKey: "patient.name",
     header: "Paciente",
   },
   {
+    id: "doctor",
     accessorKey: "doctor.name",
     header: "Médico",
   },
   {
+    id: "speciality",
     accessorKey: "doctor.speciality",
     header: "Especialidade",
   },
   {
+    id: "date",
     accessorKey: "date",
-    header: "Data",
+    header: "Data e Hora",
     cell: ({ row }) => {
-      const date = row.getValue("date") as Date;
-      return format(date, "PPP 'às' HH:mm", { locale: ptBR });
+      const date = row.original.date;
+      return format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
     },
   },
   {
+    id: "price",
     accessorKey: "AppointmentPriceInCents",
     header: "Valor",
     cell: ({ row }) => {
-      const priceInCents = row.getValue("AppointmentPriceInCents") as number;
+      const priceInCents = row.original.AppointmentPriceInCents;
       return new Intl.NumberFormat("pt-BR", {
         style: "currency",
         currency: "BRL",
@@ -47,6 +52,7 @@ export const appointmentsTableColumns: ColumnDef<
   },
   {
     id: "actions",
+    header: "Ações",
     cell: ({ row }) => {
       return <AppointmentsTableActions appointment={row.original} />;
     },
