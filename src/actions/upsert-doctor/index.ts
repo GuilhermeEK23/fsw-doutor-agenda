@@ -2,6 +2,7 @@
 
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 
@@ -25,8 +26,22 @@ export const upsertDoctor = actionClient
       throw new Error("Unauthorized");
     }
 
-    if (!session.user.clinic?.id) {
+    if (!session.user.clinic) {
       throw new Error("Clinic not found");
+    }
+
+    if (parsedInput.id) {
+      const doctor = await db.query.doctorsTable.findFirst({
+        where: eq(doctorsTable.id, parsedInput.id),
+      });
+
+      if (!doctor) {
+        throw new Error("Doctor not found");
+      }
+
+      if (doctor.clinicId !== session.user.clinic.id) {
+        throw new Error("Doctor not found");
+      }
     }
 
     const availableFromTime = parsedInput.availableFromTime;

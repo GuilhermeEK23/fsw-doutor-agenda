@@ -1,33 +1,44 @@
 "use server";
 
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { z } from "zod";
 
 import { db } from "@/db";
 import { appointmentsTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { actionClient } from "@/lib/next-safe-action";
 
-const schema = z.object({
-  id: z.string().optional(),
-  patientId: z.string().min(1),
-  doctorId: z.string().min(1),
-  appointmentPriceInCents: z.number().min(1),
-  date: z.string(),
-});
+import { upsertAppointmentSchema } from "./schema";
 
 export const upsertAppointment = actionClient
-  .schema(schema)
+  .schema(upsertAppointmentSchema)
   .action(async ({ parsedInput }) => {
     const session = await auth.api.getSession({
       headers: await headers(),
     });
 
-    if (!session?.user?.clinic) {
+    if (!session?.user) {
       throw new Error("Unauthorized");
     }
 
+    if (!session.user.clinic) {
+      throw new Error("Clinic not found");
+    }
+
+    if (parsedInput.id) {
+      const appointment = await db.query.appointmentsTable.findFirst({
+        where: eq(appointmentsTable.id, parsedInput.id),
+      });
+
+      if (!appointment) {
+        throw new Error("Appointment not found");
+      }
+
+      if (appointment.clinicId !== session.user.clinic.id) {
+        throw new Error("Appointment not found");
+      }
+    }
     await db
       .insert(appointmentsTable)
       .values({

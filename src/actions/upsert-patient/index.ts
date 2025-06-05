@@ -1,5 +1,6 @@
 "use server";
 
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 
@@ -21,8 +22,22 @@ export const upsertPatient = actionClient
       throw new Error("Unauthorized");
     }
 
-    if (!session.user.clinic?.id) {
+    if (!session.user.clinic) {
       throw new Error("Clinic not found");
+    }
+
+    if (parsedInput.id) {
+      const patient = await db.query.patientsTable.findFirst({
+        where: eq(patientsTable.id, parsedInput.id),
+      });
+
+      if (!patient) {
+        throw new Error("Patient not found");
+      }
+
+      if (patient.clinicId !== session.user.clinic.id) {
+        throw new Error("Patient not found");
+      }
     }
 
     await db

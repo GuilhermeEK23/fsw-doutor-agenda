@@ -173,7 +173,7 @@ const UpsertAppointmentForm = ({
     upsertAppointmentAction.execute({
       ...values,
       id: appointment?.id,
-      date: dateTime.toISOString(),
+      date: dateTime,
       appointmentPriceInCents: values.appointmentPrice * 100,
     });
   };
