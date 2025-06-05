@@ -163,8 +163,8 @@ const UpsertAppointmentForm = ({
     if (!selectedDoctor) return false;
     const dayOfWeek = date.getDay();
     return (
-      dayOfWeek >= parseInt(selectedDoctor?.availableFromTime) &&
-      dayOfWeek <= parseInt(selectedDoctor?.availableToTime)
+      dayOfWeek >= selectedDoctor.availableFromWeekDay &&
+      dayOfWeek <= selectedDoctor.availableToWeekDay
     );
   };
 
@@ -308,7 +308,7 @@ const UpsertAppointmentForm = ({
                       selected={field.value}
                       onSelect={field.onChange}
                       disabled={(date) =>
-                        date < new Date() || isDateAvailable(date)
+                        date < new Date() || !isDateAvailable(date)
                       }
                       initialFocus
                     />
