@@ -104,6 +104,7 @@ const UpsertAppointmentForm = ({
         doctorId: selectedDoctorId,
         date: dayjs(selectedDate).format("YYYY-MM-DD"),
       }),
+    enabled: !!selectedDoctorId && !!selectedDate,
   });
 
   const upsertAppointmentAction = useAction(upsertAppointment, {

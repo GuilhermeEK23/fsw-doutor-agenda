@@ -10,4 +10,5 @@ export const upsertAppointmentSchema = z.object({
   date: z.date({
     message: "Data é obrigatória",
   }),
+  time: z.string().min(1, { message: "Horário é obrigatório" }),
 });
