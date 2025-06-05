@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { z } from "zod";
 
@@ -9,6 +10,7 @@ import { auth } from "@/lib/auth";
 import { actionClient } from "@/lib/next-safe-action";
 
 const schema = z.object({
+  id: z.string().optional(),
   patientId: z.string().min(1),
   doctorId: z.string().min(1),
   appointmentPriceInCents: z.number().min(1),
@@ -26,16 +28,27 @@ export const upsertAppointment = actionClient
       throw new Error("Unauthorized");
     }
 
-    const appointment = await db
+    await db
       .insert(appointmentsTable)
       .values({
+        id: parsedInput.id,
         patientId: parsedInput.patientId,
         doctorId: parsedInput.doctorId,
         AppointmentPriceInCents: parsedInput.appointmentPriceInCents,
         date: new Date(parsedInput.date),
         clinicId: session.user.clinic.id,
       })
-      .returning();
+      .onConflictDoUpdate({
+        target: [appointmentsTable.id],
+        set: {
+          id: parsedInput.id,
+          patientId: parsedInput.patientId,
+          doctorId: parsedInput.doctorId,
+          AppointmentPriceInCents: parsedInput.appointmentPriceInCents,
+          date: new Date(parsedInput.date),
+          clinicId: session.user.clinic.id,
+        },
+      });
 
-    return appointment[0];
+    revalidatePath("/appointments");
   });

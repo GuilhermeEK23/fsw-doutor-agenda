@@ -28,7 +28,6 @@ const AddAppointmentButton = ({
           Novo agendamento
         </Button>
       </DialogTrigger>
-
       <UpsertAppointmentForm
         isOpen={isOpen}
         patients={patients}

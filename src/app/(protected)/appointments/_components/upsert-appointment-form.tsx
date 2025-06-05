@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Loader2 } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { NumericFormat } from "react-number-format";
 import { toast } from "sonner";
@@ -37,54 +37,97 @@ import {
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { doctorsTable, patientsTable } from "@/db/schema";
+import { appointmentsTable, doctorsTable, patientsTable } from "@/db/schema";
 import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
   patientId: z.string().min(1, { message: "Paciente é obrigatório" }),
   doctorId: z.string().min(1, { message: "Médico é obrigatório" }),
-  appointmentPriceInCents: z
+  appointmentPrice: z
     .number()
-    .min(1, { message: "Preço é obrigatório" }),
+    .min(1, { message: "Valor da consulta é obrigatório" }),
   date: z.date({
-    required_error: "Data é obrigatória",
+    message: "Data é obrigatória",
   }),
   time: z.string().min(1, { message: "Hora é obrigatória" }),
 });
 
 interface UpsertAppointmentFormProps {
-  onSuccess: () => void;
   isOpen: boolean;
   patients: (typeof patientsTable.$inferSelect)[];
   doctors: (typeof doctorsTable.$inferSelect)[];
+  onSuccess: () => void;
+  appointment?: typeof appointmentsTable.$inferSelect & {
+    patient: { name: string };
+    doctor: { name: string; speciality: string };
+  };
 }
+
+const timeSlots = [
+  "05:00:00",
+  "05:30:00",
+  "06:00:00",
+  "06:30:00",
+  "07:00:00",
+  "07:30:00",
+  "08:00:00",
+  "08:30:00",
+  "09:00:00",
+  "09:30:00",
+  "10:00:00",
+  "10:30:00",
+  "11:00:00",
+  "11:30:00",
+  "12:00:00",
+  "12:30:00",
+  "13:00:00",
+  "13:30:00",
+  "14:00:00",
+  "14:30:00",
+  "15:00:00",
+  "15:30:00",
+  "16:00:00",
+  "16:30:00",
+  "17:00:00",
+  "17:30:00",
+  "18:00:00",
+  "18:30:00",
+  "19:00:00",
+  "19:30:00",
+  "20:00:00",
+  "20:30:00",
+  "21:00:00",
+];
 
 const UpsertAppointmentForm = ({
   onSuccess,
   isOpen,
   patients,
   doctors,
+  appointment,
 }: UpsertAppointmentFormProps) => {
-  const [selectedDoctor, setSelectedDoctor] = useState<{
-    id: string;
-    appointmentPriceInCents: number;
-  } | null>(null);
-
   const form = useForm<z.infer<typeof formSchema>>({
+    shouldUnregister: true,
     resolver: zodResolver(formSchema),
     defaultValues: {
-      patientId: "",
-      doctorId: "",
-      appointmentPriceInCents: 0,
-      time: "",
+      patientId: appointment?.patientId ?? "",
+      doctorId: appointment?.doctorId ?? "",
+      appointmentPrice: appointment?.AppointmentPriceInCents
+        ? appointment.AppointmentPriceInCents / 100
+        : 0,
+      date: appointment?.date ? new Date(appointment.date) : undefined,
+      time: appointment?.date
+        ? format(new Date(appointment.date), "HH:mm:ss")
+        : "",
     },
   });
+
+  const selectedDoctorId = form.watch("doctorId");
+  const selectedPatientId = form.watch("patientId");
 
   const upsertAppointmentAction = useAction(upsertAppointment, {
     onSuccess: () => {
@@ -98,19 +141,29 @@ const UpsertAppointmentForm = ({
 
   useEffect(() => {
     if (isOpen) {
-      form.reset();
-      setSelectedDoctor(null);
+      form.reset({
+        patientId: "",
+        doctorId: "",
+        appointmentPrice: 0,
+        date: undefined,
+        time: "",
+      });
     }
   }, [isOpen, form]);
 
   useEffect(() => {
-    if (selectedDoctor) {
-      form.setValue(
-        "appointmentPriceInCents",
-        selectedDoctor.appointmentPriceInCents / 100
+    if (selectedDoctorId) {
+      const selectedDoctor = doctors.find(
+        (doctor) => doctor.id === selectedDoctorId
       );
+      if (selectedDoctor) {
+        form.setValue(
+          "appointmentPrice",
+          selectedDoctor.appointmentPriceInCents / 100
+        );
+      }
     }
-  }, [selectedDoctor, form]);
+  }, [selectedDoctorId, form, doctors]);
 
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
     const dateTime = new Date(values.date);
@@ -119,20 +172,26 @@ const UpsertAppointmentForm = ({
 
     upsertAppointmentAction.execute({
       ...values,
-      appointmentPriceInCents: values.appointmentPriceInCents * 100,
+      id: appointment?.id,
       date: dateTime.toISOString(),
+      appointmentPriceInCents: values.appointmentPrice * 100,
     });
   };
 
-  const disabledDates = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return {
-      before: today,
-    };
-  }, []);
+  const isDateAvailable = (date: Date) => {
+    if (!selectedDoctorId) return false;
+    const selectedDoctor = doctors.find(
+      (doctor) => doctor.id === selectedDoctorId
+    );
+    if (!selectedDoctor) return false;
+    const dayOfWeek = date.getDay();
+    return (
+      dayOfWeek >= parseInt(selectedDoctor?.availableFromTime) &&
+      dayOfWeek <= parseInt(selectedDoctor?.availableToTime)
+    );
+  };
 
-  const canSelectDateTime = form.watch("patientId") && form.watch("doctorId");
+  const isDateTimeEnabled = selectedPatientId && selectedDoctorId;
 
   return (
     <DialogContent>
@@ -184,10 +243,10 @@ const UpsertAppointmentForm = ({
                       (d: typeof doctorsTable.$inferSelect) => d.id === value
                     );
                     if (doctor) {
-                      setSelectedDoctor({
-                        id: doctor.id,
-                        appointmentPriceInCents: doctor.appointmentPriceInCents,
-                      });
+                      form.setValue(
+                        "appointmentPrice",
+                        doctor.appointmentPriceInCents / 100
+                      );
                     }
                   }}
                   value={field.value}
@@ -214,7 +273,7 @@ const UpsertAppointmentForm = ({
 
           <FormField
             control={form.control}
-            name="appointmentPriceInCents"
+            name="appointmentPrice"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Preço da consulta</FormLabel>
@@ -228,6 +287,7 @@ const UpsertAppointmentForm = ({
                     fixedDecimalScale
                     decimalSeparator=","
                     allowNegative={false}
+                    disabled={!selectedDoctorId}
                     allowLeadingZeros={false}
                     thousandSeparator="."
                     customInput={Input}
@@ -254,7 +314,7 @@ const UpsertAppointmentForm = ({
                           "w-full pl-3 text-left font-normal",
                           !field.value && "text-muted-foreground"
                         )}
-                        disabled={!canSelectDateTime}
+                        disabled={!isDateTimeEnabled}
                       >
                         {field.value ? (
                           format(field.value, "PPP", { locale: ptBR })
@@ -270,7 +330,9 @@ const UpsertAppointmentForm = ({
                       locale={ptBR}
                       selected={field.value}
                       onSelect={field.onChange}
-                      disabled={disabledDates}
+                      disabled={(date) =>
+                        date < new Date() || isDateAvailable(date)
+                      }
                       initialFocus
                     />
                   </PopoverContent>
@@ -287,7 +349,7 @@ const UpsertAppointmentForm = ({
               <FormItem>
                 <FormLabel>Hora da consulta</FormLabel>
                 <Select
-                  disabled={!canSelectDateTime}
+                  disabled={!isDateTimeEnabled}
                   value={field.value}
                   onValueChange={field.onChange}
                 >
@@ -297,48 +359,11 @@ const UpsertAppointmentForm = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Manhã</SelectLabel>
-                      <SelectItem value="05:00:00">05:00</SelectItem>
-                      <SelectItem value="05:30:00">05:30</SelectItem>
-                      <SelectItem value="06:00:00">06:00</SelectItem>
-                      <SelectItem value="06:30:00">06:30</SelectItem>
-                      <SelectItem value="07:00:00">07:00</SelectItem>
-                      <SelectItem value="07:30:00">07:30</SelectItem>
-                      <SelectItem value="08:00:00">08:00</SelectItem>
-                      <SelectItem value="08:30:00">08:30</SelectItem>
-                      <SelectItem value="09:00:00">09:00</SelectItem>
-                      <SelectItem value="09:30:00">09:30</SelectItem>
-                      <SelectItem value="10:00:00">10:00</SelectItem>
-                      <SelectItem value="10:30:00">10:30</SelectItem>
-                      <SelectItem value="11:00:00">11:00</SelectItem>
-                      <SelectItem value="11:30:00">11:30</SelectItem>
-                      <SelectItem value="12:00:00">12:00</SelectItem>
-                    </SelectGroup>
-                    <SelectGroup>
-                      <SelectLabel>Tarde</SelectLabel>
-                      <SelectItem value="12:30:00">12:30</SelectItem>
-                      <SelectItem value="13:00:00">13:00</SelectItem>
-                      <SelectItem value="13:30:00">13:30</SelectItem>
-                      <SelectItem value="14:00:00">14:00</SelectItem>
-                      <SelectItem value="14:30:00">14:30</SelectItem>
-                      <SelectItem value="15:00:00">15:00</SelectItem>
-                      <SelectItem value="15:30:00">15:30</SelectItem>
-                      <SelectItem value="16:00:00">16:00</SelectItem>
-                      <SelectItem value="16:30:00">16:30</SelectItem>
-                      <SelectItem value="17:00:00">17:00</SelectItem>
-                      <SelectItem value="17:30:00">17:30</SelectItem>
-                      <SelectItem value="18:00:00">18:00</SelectItem>
-                    </SelectGroup>
-                    <SelectGroup>
-                      <SelectLabel>Noite</SelectLabel>
-                      <SelectItem value="18:30:00">18:30</SelectItem>
-                      <SelectItem value="19:00:00">19:00</SelectItem>
-                      <SelectItem value="19:30:00">19:30</SelectItem>
-                      <SelectItem value="20:00:00">20:00</SelectItem>
-                      <SelectItem value="20:30:00">20:30</SelectItem>
-                      <SelectItem value="21:00:00">21:00</SelectItem>
-                    </SelectGroup>
+                    {timeSlots.map((time) => (
+                      <SelectItem key={time} value={time}>
+                        {time.slice(0, 5)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
