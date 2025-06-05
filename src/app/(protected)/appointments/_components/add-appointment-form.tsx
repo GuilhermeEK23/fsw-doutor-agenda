@@ -13,8 +13,8 @@ import { NumericFormat } from "react-number-format";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { addAppointment } from "@/actions/add-appointment";
 import { getAvailableTimes } from "@/actions/get-available-times";
-import { upsertAppointment } from "@/actions/upsert-appointment";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -59,7 +59,7 @@ const formSchema = z.object({
   time: z.string().min(1, { message: "Hora é obrigatória" }),
 });
 
-interface UpsertAppointmentFormProps {
+interface AddAppointmentFormProps {
   isOpen: boolean;
   patients: (typeof patientsTable.$inferSelect)[];
   doctors: (typeof doctorsTable.$inferSelect)[];
@@ -70,26 +70,21 @@ interface UpsertAppointmentFormProps {
   };
 }
 
-const UpsertAppointmentForm = ({
+const AddAppointmentForm = ({
   onSuccess,
   isOpen,
   patients,
   doctors,
-  appointment,
-}: UpsertAppointmentFormProps) => {
+}: AddAppointmentFormProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     shouldUnregister: true,
     resolver: zodResolver(formSchema),
     defaultValues: {
-      patientId: appointment?.patientId ?? "",
-      doctorId: appointment?.doctorId ?? "",
-      appointmentPrice: appointment?.AppointmentPriceInCents
-        ? appointment.AppointmentPriceInCents / 100
-        : 0,
-      date: appointment?.date ? new Date(appointment.date) : undefined,
-      time: appointment?.date
-        ? format(new Date(appointment.date), "HH:mm:ss")
-        : "",
+      patientId: "",
+      doctorId: "",
+      appointmentPrice: 0,
+      date: undefined,
+      time: "",
     },
   });
 
@@ -107,7 +102,7 @@ const UpsertAppointmentForm = ({
     enabled: !!selectedDoctorId && !!selectedDate,
   });
 
-  const upsertAppointmentAction = useAction(upsertAppointment, {
+  const addAppointmentAction = useAction(addAppointment, {
     onSuccess: () => {
       toast.success("Consulta agendada com sucesso");
       onSuccess();
@@ -148,9 +143,8 @@ const UpsertAppointmentForm = ({
     const [hours, minutes] = values.time.split(":");
     dateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-    upsertAppointmentAction.execute({
+    addAppointmentAction.execute({
       ...values,
-      id: appointment?.id,
       date: dateTime,
       appointmentPriceInCents: values.appointmentPrice * 100,
     });
@@ -357,9 +351,9 @@ const UpsertAppointmentForm = ({
           <Button
             type="submit"
             className="w-full"
-            disabled={upsertAppointmentAction.isPending}
+            disabled={addAppointmentAction.isPending}
           >
-            {upsertAppointmentAction.isPending ? (
+            {addAppointmentAction.isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : null}
             Agendar consulta
@@ -370,4 +364,4 @@ const UpsertAppointmentForm = ({
   );
 };
 
-export default UpsertAppointmentForm;
+export default AddAppointmentForm;
