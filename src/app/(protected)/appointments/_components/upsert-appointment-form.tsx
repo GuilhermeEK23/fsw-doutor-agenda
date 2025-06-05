@@ -337,8 +337,13 @@ const UpsertAppointmentForm = ({
                   </FormControl>
                   <SelectContent>
                     {availableTimes?.data?.map((time) => (
-                      <SelectItem key={time.value} value={time.value}>
-                        {time.value.slice(0, 5)}
+                      <SelectItem
+                        key={time.value}
+                        value={time.value}
+                        disabled={!time.available}
+                      >
+                        {time.value.slice(0, 5)}{" "}
+                        {!time.available && "(Indisponível)"}
                       </SelectItem>
                     ))}
                   </SelectContent>
