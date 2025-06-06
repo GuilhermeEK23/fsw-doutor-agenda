@@ -43,7 +43,7 @@ export const appointmentsTableColumns: ColumnDef<
     accessorKey: "AppointmentPriceInCents",
     header: "Valor",
     cell: ({ row }) => {
-      const priceInCents = row.original.AppointmentPriceInCents;
+      const priceInCents = row.original.appointmentPriceInCents;
       return new Intl.NumberFormat("pt-BR", {
         style: "currency",
         currency: "BRL",

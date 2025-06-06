@@ -46,7 +46,7 @@ export const addAppointment = actionClient
     await db.insert(appointmentsTable).values({
       patientId: parsedInput.patientId,
       doctorId: parsedInput.doctorId,
-      AppointmentPriceInCents: parsedInput.appointmentPriceInCents,
+      appointmentPriceInCents: parsedInput.appointmentPriceInCents,
       date: new Date(parsedInput.date),
       clinicId: session.user.clinic.id,
     });
