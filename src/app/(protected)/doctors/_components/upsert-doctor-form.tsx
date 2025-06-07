@@ -50,7 +50,7 @@ import {
 } from "@/components/ui/select";
 import { doctorsTable } from "@/db/schema";
 
-import { medicalSpecialties } from "../_contants";
+import { medicalSpecialties } from "../../_contants";
 
 const formSchema = z
   .object({
