@@ -15,10 +15,6 @@ export const createStripeCheckout = actionClient.action(async () => {
     throw new Error("Unauthorized");
   }
 
-  if (!session.user.clinic) {
-    throw new Error("Clinic not found");
-  }
-
   if (!process.env.STRIPE_SECRET_KEY) {
     throw new Error("Stripe secret key is not set");
   }

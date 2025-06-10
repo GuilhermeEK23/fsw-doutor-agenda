@@ -4,7 +4,7 @@ import { customSession } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { usersToClinicsTable } from "@/db/schema";
+import { usersTable, usersToClinicsTable } from "@/db/schema";
 import * as schema from "@/db/schema";
 
 export const auth = betterAuth({
@@ -15,7 +15,7 @@ export const auth = betterAuth({
   }),
   plugins: [
     customSession(async ({ user, session }) => {
-      const [clinic] = await db.query.usersToClinicsTable.findMany({
+      const [userToClinic] = await db.query.usersToClinicsTable.findMany({
         where: eq(usersToClinicsTable.userId, user.id),
         with: {
           clinic: true,
@@ -23,14 +23,27 @@ export const auth = betterAuth({
         },
       });
 
+      if (!userToClinic) {
+        const userWithPlan = await db.query.usersTable.findFirst({
+          where: eq(usersTable.id, user.id),
+        });
+        return {
+          user: {
+            ...user,
+            plan: userWithPlan?.plan,
+            clinic: undefined,
+          },
+        };
+      }
+
       return {
         user: {
           ...user,
-          plan: clinic.user.plan,
-          clinic: clinic
+          plan: userToClinic?.user?.plan,
+          clinic: userToClinic
             ? {
-                id: clinic.clinicId,
-                name: clinic.clinic.name,
+                id: userToClinic.clinicId,
+                name: userToClinic.clinic.name,
               }
             : undefined,
         },

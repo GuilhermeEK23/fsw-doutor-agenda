@@ -40,6 +40,10 @@ const DashboardPage = async ({ searchParams }: DashboardPageProps) => {
     redirect("/authentication");
   }
 
+  if (!session.user.plan) {
+    redirect("/new-subscription");
+  }
+
   if (!session.user.clinic) {
     redirect("/clinic-form");
   }
